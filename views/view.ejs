@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+<head>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .live {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        }
+        
+        #effect {
+            width: 100%;
+            height: 100%;
+            /*object-fit: cover;*/
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 2;
+        }
+        
+        .trans {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: -1;
+            background-image: radial-gradient(silver, black);
+        }
+        
+        .canal {
+            position: absolute;
+            left: 20;
+            top: 20px;
+            z-index: 3;
+            border-style: inset;
+            font-size: 14px;
+            background-color: silver;
+        }
+        
+        #full {
+            position: absolute;
+            left: 180px;
+            top: 20px;
+            z-index: 4;
+            background-color: silver;
+            border-radius: 20%;
+        }
+        
+        .icon {
+            max-width: 15px;
+            max-height: 15px;
+        }
+        
+        .info {
+            position: absolute;
+            left: 0;
+            bottom: 20px;
+            font-size: 14px;
+            color: white;
+            text-decoration: none;
+            z-index: 20;
+        }
+        
+        .info:hover {
+            font-size: 14px;
+            color: silver;
+            text-decoration: none;
+            z-index: 10;
+        }
+        
+        #c1 {
+            display: none;
+        }
+        
+        #c2 {
+            display: none;
+        }
+        
+        #c1-2 {
+            display: none;
+        }
+        
+        #c2-2 {
+            display: none;
+        }
+        
+        #hc {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <a class="info" href="/">Inicio</a>
+        <video src="" class="live tv"></video>
+        <canvas class="live trans"></canvas>
+        <div id="effect"></div>
+    </div>
+
+    <button id="full" onclick="fullscr()"><img class="icon" src="/icons/fs.svg"></button>
+
+    <input type="text" id="canal" name="canal" class="canal" placeholder="Nombre del canal a ver">
+    <input type="text" id="c1" name="c1" class="c1">
+    <input type="text" id="c1-2" name="c1-2" class="c1-2">
+    <input type="text" id="c2" name="c2" class="c2">
+    <input type="text" id="c2-2" name="c2-2" class="c2-2">
+    <script>
+        const socket = io("https://cimarron-media.herokuapp.com/");
+        socket.on("connection");
+        socket.on("streaming", (arrayBuffer, name) => {
+            var canal = document.querySelector("#canal");
+            if (name == canal.value) {
+
+                var blob = new Blob([arrayBuffer], {
+                    "type": "video/mp4"
+                });
+                //var video = document.createElement("video");
+
+                var video = document.querySelector(".tv");
+
+                var canvas = document.querySelector(".trans");
+                //var video = document.getElementById("video");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext("2d").drawImage(video, 0, 0, video.videoWidth, video.videoHeight); // for drawing the video element on the canvas
+
+                /** Code to merge image **/
+
+                const playImage = new Image();
+                playImage.src = "path to image asset";
+                playImage.onload = () => {
+                    const startX = (video.videoWidth / 2) - (playImage.width / 2);
+                    const startY = (video.videoHeight / 2) - (playImage.height / 2);
+                    canvas.getContext("2d").drawImage(playImage, startX, startY, playImage.width, playImage.height);
+                    canvas.toBlob() = (blob) => { // Canvas element gives a callback to listen to the event after blob is prepared from canvas
+                        const img = new Image();
+                        img.src = window.URL.createObjectUrl(blob); // window object with static function of URL class that can be used to get URL from blob
+                    };
+                };
+
+                //video.srcObject = stream;
+                video.src = window.URL.createObjectURL(blob);
+                video.play();
+
+                // document.querySelector("div").innerHTML = stream;
+                //document.querySelector("h1").innerHTML = stream;
+            }
+        });
+        socket.on("efecto", (codigo, codigo2, enombre) => {
+            var efecto = document.querySelector("#effect");
+            var canal = document.querySelector("#canal");
+            var c1 = document.querySelector("#c1");
+            var c2 = document.querySelector("#c2");
+            var c12 = document.querySelector("#c1-2");
+            var c22 = document.querySelector("#c2-2");
+            var scrypt = document.querySelector("#ins");
+            //console.log(codigo2);
+
+            if (enombre == canal.value) {
+                c12.value = codigo;
+                c22.value = codigo2;
+                if (c1.value == c12.value) {
+
+                    console.log('true');
+
+                } else {
+                    console.log('false');
+                    c1.value = c12.value;
+                    efecto.innerHTML = codigo;
+                }
+                if (c2.value == c22.value) {
+
+                    console.log('true');
+
+                } else {
+                    console.log('false');
+                    scrypt.remove();
+                    c2.value = c22.value;
+                    var script = document.createElement("script");
+
+                    // Add script content
+
+                    script.innerHTML = codigo2;
+                    script.id = 'ins';
+
+                    // Append
+
+                    document.body.appendChild(script);
+
+                }
+            }
+
+        });
+        const fullscr = () => {
+            var elem = document.querySelector("#container");
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+
+            }
+        }
+    </script>
+    <script id="ins"></script>
+</body>
+
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            overflow: hidden;
+        }
+        
+        h3 {
+            color: white;
+        }
+        
+        label {
+            font-size: 20px;
+            color: white;
+        }
+        
+        a {
+            font-size: 20px;
+            color: white;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            font-size: 20px;
+            color: silver;
+            text-decoration: none;
+        }
+        
+        div {
+            background-image: radial-gradient(silver, black);
+            width: 100%;
+            height: 100%;
+            margin-top: -20px;
+            margin-left: -20px;
+            padding-bottom: 200%;
+            padding-top: 10%;
+            padding-left: 15%;
+            padding-right: 10%;
+        }
+        
+        form {
+            background-image: radial-gradient(silver, black);
+            width: 80%;
+            height: 100%;
+            padding-bottom: 7%;
+            padding-top: 1%;
+            padding-left: 1%;
+            padding-right: 1%;
+        }
+        
+        input {
+            width: 100%;
+            border-style: inset;
+            font-size: 14px;
+            background-color: silver;
+        }
+        
+        button {
+            background-color: silver;
+            color: white;
+            border-radius: 20%;
+            float: right;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body onload="habilitar()">
+    <div>
+        <form action="/login" method="post">
+            <h3>Login</h3>
+            <input type="text" onchange="habilitar()" name="canal" id="canal" placeholder="Canal"><br><br>
+            <input type="text" name="user" id="user" placeholder="Usuario"><br><br>
+            <input type="password" name="pass" id="pass" placeholder="Password"><br><br>
+            <button type="submit">Login</button>
+        </form>
+        <a href="/">Inicio</a> <label>|</label>
+        <a href="/reg">Nuevo canal?</a>
+    </div>
+    <script>
+        function habilitar() {
+            var boton = document.querySelector('button');
+            var canal = document.querySelector('#canal');
+
+            if (canal.value == '') {
+                boton.disabled = true;
+            } else {
+                boton.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

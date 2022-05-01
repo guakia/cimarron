@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+
+    <style>
+        h4 {
+            color: white;
+        }
+        
+        video {
+            width: 100%;
+            height: 51%;
+            /*object-fit: cover;*/
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            background-color: black;
+        }
+        
+        #effect {
+            width: 100%;
+            height: 50%;
+            /*object-fit: cover;*/
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 2;
+        }
+        
+        #control {
+            width: 100%;
+            height: auto;
+            min-height: 52%;
+            /*object-fit: cover;*/
+            position: absolute;
+            left: 0;
+            top: 48%;
+            z-index: 3;
+            /*border-style: solid;*/
+            background-image: radial-gradient(silver, black);
+        }
+        
+        .icon {
+            max-width: 25px;
+            max-height: 25px;
+            margin-left: -5px;
+        }
+        
+        .botn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50px;
+        }
+        
+        .b1 {
+            background-image: radial-gradient(rgb(179, 250, 221), green);
+        }
+        
+        .b2 {
+            background-image: radial-gradient(rgb(250, 179, 179), red);
+        }
+        
+        input {
+            border-style: inset;
+            font-size: 14px;
+            background-color: silver;
+        }
+        
+        textarea {
+            border-style: inset;
+            background-color: silver;
+        }
+        
+        .btn {
+            background-color: silver;
+            color: white;
+            border-radius: 20%;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="effect"></div>
+    <video muted class="live"></video>
+    <div id="control">
+        <h4>Controles de transmisi&oacute;n en vivo</h4>
+        <input type="text" name="nombre" id="nombre" class="nombre" value="<%= canal %>" readonly>
+        <input type="text" name="status" id="status" class="status" value="Fuera del aire" readonly>
+        <button class="botn b1" onclick="texgo()"><img class="icon" src="/icons/emit.svg"></button>
+        <button class="botn b2" onclick="stoptra()"><img class="icon" src="/icons/end-emit.svg"></button>
+        <h4>Area para agregar efectos y otros objetos</h4>
+        <textarea name="code" id="code" cols="30" rows="10" onchange="efecto()" placeholder="Interface (HTML,CSS)"></textarea>
+        <textarea name="code2" id="code2" cols="30" rows="10" onchange="efecto()" placeholder="Script(JS)- Solo codigo no incluya los tags <script></script>"></textarea>
+        <input type="text" name="ef_status" id="ef_status" class="ef_status" value="Desactivado" readonly>
+        <button class="btn" onclick="act()">Activar codigo</button>
+        <button class="btn" onclick="des()">Desactivar codigo</button>
+        <form action="/logout" method="get">
+            <button class="btn" type="submit">Logout</button>
+        </form>
+    </div>
+    <script>
+        const socket = io("https://cimarron-media.herokuapp.com/");
+        socket.on("connection");
+
+        const stoptra = (localMediaStream) => {
+            var status = document.querySelector('#status');
+            status.value = 'Fuera del aire';
+            var video = document.querySelector('.live');
+            video.pause();
+        }
+
+        const texgo = () => {
+            var nombre = document.querySelector('#nombre');
+            var status = document.querySelector('#status');
+            //socket.emit("texto", document.querySelector("#texto").value)
+            navigator.getMedia = (navigator.getUserMedia ||
+                navigator.webkitGetUserMedia ||
+                navigator.mozGetUserMedia);
+
+            navigator.getMedia(
+
+                // Restricciones (contraints) *Requerido
+                {
+                    video: true,
+                    audio: true
+                },
+
+                // Funcion de finalizacion (Succes-Callback) *Requerido
+                function(localMediaStream) {
+                    var video = document.querySelector('.live');
+                    var mediaRecorder = new MediaRecorder(localMediaStream);
+                    // video.src = window.URL.createObjectURL(localMediaStream);
+                    video.srcObject = localMediaStream;
+                    video.onloadedmetadata = function(e) {
+                        status.value = 'En vivo';
+                        // Haz algo con el video aquí.
+                        video.play();
+
+                        mediaRecorder.start();
+
+
+
+                        mediaRecorder.onstart = function(e) {
+                            this.chunks = [];
+
+                            // Stop recording after 5 seconds and broadcast it to server
+                            setTimeout(function() {
+                                mediaRecorder.stop()
+
+                            }, 5000);
+                        };
+                        mediaRecorder.ondataavailable = function(e) {
+                            this.chunks.push(e.data);
+                        };
+                        mediaRecorder.onstop = function(e) {
+                            if (status.value == "En vivo") {
+
+                                mediaRecorder.start();
+
+                            }
+                            var blob = new Blob(this.chunks, {
+                                'type': 'video/mp4'
+                            });
+                            socket.emit("streaming", blob, nombre.value);
+
+
+                        };
+
+
+                        //socket.emit("streaming", video.srcObject);
+                    };
+                },
+
+                // errorCallback *Opcional
+                function(err) {
+                    console.log("Ocurrió el siguiente error: " + err);
+                }
+
+            );
+        }
+        const efecto = () => {
+            var effect = document.querySelector('#effect');
+            var code = document.querySelector('#code');
+            var code2 = document.querySelector('#code2');
+            effect.innerHTML = code.value;
+        }
+        const act = () => {
+            var estatus = document.querySelector('#ef_status');
+            var eeffect = document.querySelector('#code');
+            var eeffect2 = document.querySelector('#code2');
+            var enombre = document.querySelector('#nombre');
+            estatus.value = 'Activo';
+            setInterval(function() {
+
+                if (estatus.value == 'Activo') {
+                    socket.emit("efecto", eeffect.value, eeffect2.value, enombre.value);
+                }
+            }, 2000);
+
+
+        }
+        const des = () => {
+            var estatus = document.querySelector('#ef_status');
+            estatus.value = 'Desactivado';
+
+        }
+    </script>
+</body>
+
+</html>
